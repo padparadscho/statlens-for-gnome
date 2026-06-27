@@ -1,0 +1,10 @@
+{
+  "name": "Statlens",
+  "description": "GNOME Shell extension for tracking SHx (Stronghold) asset metrics and notifying on price changes.",
+  "version-name": "0.1.0",
+  "uuid": "statlens@padparadscho.com",
+  "shell-version": ["49", "50"],
+  "url": "https://github.com/padparadscho/gnome-shell-extensions",
+  "settings-schema": "org.gnome.shell.extensions.statlens",
+  "gettext-domain": "statlens"
+}

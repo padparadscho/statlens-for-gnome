@@ -1,0 +1,3 @@
+minimumReleaseAgeExclude:
+  - eslint
+  - prettier

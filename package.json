@@ -1,0 +1,28 @@
+{
+  "name": "statlens-for-gnome",
+  "version": "0.1.0",
+  "description": "GNOME Shell extension for tracking SHx (Stronghold) asset metrics and notifying on price changes.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "author": "Padparadscho <contact@padparadscho.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/padparadscho/statlens-for-gnome.git"
+  },
+  "bugs": "https://github.com/padparadscho/statlens-for-gnome/issues",
+  "homepage": "https://github.com/padparadscho/statlens-for-gnome#readme",
+  "license": "AGPL-3.0-only",
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.6.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.8.5"
+  },
+  "packageManager": "pnpm@11.5.0"
+}
