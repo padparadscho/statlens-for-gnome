@@ -42,5 +42,8 @@ export const COINGECKO_ASSET_ID = 'stronghold-token';
 export const COINGECKO_ASSET_URL =
   'https://www.coingecko.com/en/coins/stronghold';
 
+export const COINGECKO_ASSET_NAME = 'Stronghold';
+export const COINGECKO_ASSET_SYMBOL = 'SHX';
+
 export const SPARKLINE_GREEN_COLOR = [0.15, 0.64, 0.41, 1.0];
 export const SPARKLINE_RED_COLOR = [0.88, 0.11, 0.14, 1.0];

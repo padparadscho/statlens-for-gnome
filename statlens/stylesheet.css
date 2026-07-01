@@ -20,6 +20,42 @@
   opacity: 0.55;
 }
 
+.header-item {
+  background-color: rgba(128, 128, 128, 0.12);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.header-row {
+  spacing: 10px;
+  padding: 2px 0;
+}
+
+.header-labels {
+  spacing: 2px;
+}
+
+.header-name {
+  font-size: 1.15em;
+  font-weight: bold;
+}
+
+.header-symbol {
+  font-size: 0.7em;
+  opacity: 0.5;
+  letter-spacing: 0.5px;
+}
+
+.rank-badge {
+  font-size: 0.8em;
+  font-weight: 700;
+  color: -st-accent-color;
+  background-color: rgba(128, 128, 128, 0.2);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-top: 1px;
+}
+
 .progress-bar-track {
   background-color: rgba(128, 128, 128, 0.2);
   border-radius: 4px;

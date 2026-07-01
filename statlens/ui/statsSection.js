@@ -1,11 +1,20 @@
 // SPDX-FileCopyrightText: 2026 Padparadscho <contact@padparadscho.com>
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import St from 'gi://St';
 
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import { PREFERENCES_KEYS, STATS_LABELS, STATS_ROWS } from '../constants.js';
+import {
+  COINGECKO_ASSET_NAME,
+  COINGECKO_ASSET_SYMBOL,
+  PREFERENCES_KEYS,
+  STATS_LABELS,
+  STATS_ROWS,
+} from '../constants.js';
 import { formatCount, formatNumber, formatPrice } from '../utils.js';
 import { ProgressBar } from './progressBar.js';
 import { Sparkline } from './sparkline.js';
@@ -23,11 +32,15 @@ const textFormatters = {
 };
 
 export class StatsSection extends PopupMenu.PopupMenuSection {
-  constructor(settings) {
+  constructor(settings, extensionPath) {
     super();
 
     this._settings = settings;
+    this._extensionPath = extensionPath;
     this._rows = {};
+    this._headerItem = null;
+    this._logoIcon = null;
+    this._rankLabel = null;
     this._valueLabels = {};
     this._priceLabel = null;
     this._changeLabel = null;
@@ -56,6 +69,8 @@ export class StatsSection extends PopupMenu.PopupMenuSection {
   }
 
   update(data, currency) {
+    this._updateHeader(data);
+
     if (this._priceLabel) {
       const arrow = data.change >= 0 ? '▲' : '▼';
       this._priceLabel.text = `${formatPrice(data.price, currency)} ${arrow}`;
@@ -76,6 +91,11 @@ export class StatsSection extends PopupMenu.PopupMenuSection {
     if (this._supplyBar) this._updateSupply(data);
     if (this._highLowBar) this._updateHighLow(data, currency);
     if (this._sparkline) this._sparkline.setPrices(data.sparkline);
+  }
+
+  _updateHeader(data) {
+    if (this._rankLabel && data.rank != null)
+      this._rankLabel.text = `#${data.rank}`;
   }
 
   _updateSupply(data) {
@@ -107,6 +127,13 @@ export class StatsSection extends PopupMenu.PopupMenuSection {
   }
 
   clearRows() {
+    if (this._headerItem) {
+      this._headerItem.destroy();
+      this._headerItem = null;
+      this._logoIcon = null;
+      this._rankLabel = null;
+    }
+
     if (this._sparkline) this._sparkline.setPrices([]);
     for (const row of Object.values(this._rows)) row.destroy();
     this._rows = {};
@@ -138,6 +165,8 @@ export class StatsSection extends PopupMenu.PopupMenuSection {
 
   _rebuild() {
     this.clearRows();
+
+    this._addHeaderRow();
 
     const enabled = new Set(
       this._settings.get_strv(PREFERENCES_KEYS.ENABLED_STATS),
@@ -184,6 +213,65 @@ export class StatsSection extends PopupMenu.PopupMenuSection {
     const valueLabel = new St.Label({ text: '---' });
     const item = this._createSection(label, valueLabel);
     return [item, valueLabel];
+  }
+
+  _addHeaderRow() {
+    const item = this._createMenuItem(true);
+    item.add_style_class_name('header-item');
+
+    const headerRow = new St.BoxLayout({
+      style_class: 'header-row',
+      x_expand: true,
+      y_align: Clutter.ActorAlign.CENTER,
+    });
+
+    const logoPath = GLib.build_filenamev([
+      this._extensionPath,
+      'icons',
+      'stronghold-logo.svg',
+    ]);
+    this._logoIcon = new St.Icon({
+      gicon: new Gio.FileIcon({ file: Gio.File.new_for_path(logoPath) }),
+      icon_size: 18,
+      fallback_icon_name: 'image-x-generic-symbolic',
+      y_align: Clutter.ActorAlign.CENTER,
+    });
+
+    const labelsBox = new St.BoxLayout({
+      vertical: true,
+      x_expand: true,
+      y_align: Clutter.ActorAlign.CENTER,
+      style_class: 'header-labels',
+    });
+
+    const nameLabel = new St.Label({
+      text: COINGECKO_ASSET_NAME,
+      style_class: 'header-name',
+    });
+
+    const symbolLabel = new St.Label({
+      text: COINGECKO_ASSET_SYMBOL,
+      style_class: 'header-symbol',
+    });
+
+    this._rankLabel = new St.Label({
+      text: '---',
+      style_class: 'rank-badge',
+      y_align: Clutter.ActorAlign.START,
+      x_align: Clutter.ActorAlign.END,
+    });
+
+    labelsBox.add_child(nameLabel);
+    labelsBox.add_child(symbolLabel);
+
+    headerRow.add_child(this._logoIcon);
+    headerRow.add_child(labelsBox);
+    headerRow.add_child(this._rankLabel);
+
+    item.add_child(headerRow);
+    this.addMenuItem(item);
+
+    this._headerItem = item;
   }
 
   _addSparklineRow() {

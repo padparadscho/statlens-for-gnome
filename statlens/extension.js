@@ -25,7 +25,7 @@ export default class StatlensExtension extends Extension {
 
     this._indicator = new Indicator();
 
-    const statsSection = new StatsSection(this._settings);
+    const statsSection = new StatsSection(this._settings, this.dir.get_path());
     this._menu = new Menu(this.uuid, this._stats.meta, statsSection, () =>
       this._refresh(),
     );

@@ -82,6 +82,7 @@ export class StatsService {
   _normalize(rawPriceResponse, details, sparkline, vsCurrency) {
     const market = details?.market_data;
     return {
+      rank: details?.market_cap_rank ?? null,
       price: rawPriceResponse[vsCurrency],
       change: rawPriceResponse[`${vsCurrency}_24h_change`],
       sparkline: sparkline ?? null,
