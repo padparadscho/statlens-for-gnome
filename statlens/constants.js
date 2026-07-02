@@ -6,6 +6,8 @@ export const PREFERENCES_KEYS = {
   REFRESH_INTERVAL: 'set-refresh-interval',
   DISPLAY_CURRENCY: 'set-display-currency',
   ENABLED_STATS: 'set-enabled-stats',
+  PRICE_ALARMS: 'set-price-alarms',
+  PREFS_TARGET_PAGE: 'set-prefs-target-page',
 };
 
 export const AVAILABLE_CURRENCIES = [
@@ -23,6 +25,8 @@ export const BREAKPOINTS = [
 
 export const MIN_REFRESH_INTERVAL = 10;
 export const MAX_REFRESH_INTERVAL = 600;
+
+export const MAX_PRICE_ALARMS = 5;
 
 export const STATS_ROWS = [
   ['price', 'Price'],

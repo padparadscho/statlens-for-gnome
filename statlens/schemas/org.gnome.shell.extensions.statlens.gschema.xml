@@ -28,5 +28,15 @@
             <summary>Set Enabled Stats</summary>
             <description>Which stats to show in the menu.</description>
         </key>
+        <key name="set-price-alarms" type="a(db)">
+            <default>[]</default>
+            <summary>Set Price Alarms</summary>
+            <description>Up to 5 one-shot SHX/USD price targets.</description>
+        </key>
+        <key name="set-prefs-target-page" type="s">
+            <default>''</default>
+            <summary>Preferences Target Page</summary>
+            <description>(Internal) Which page to show next time preferences opens.</description>
+        </key>
     </schema>
 </schemalist>

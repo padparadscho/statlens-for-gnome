@@ -6,12 +6,19 @@ import GLib from 'gi://GLib';
 
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import { StatsService } from './services/stats.js';
+import { AlarmsService } from './services/alarms.js';
 import { StatsSection } from './ui/statsSection.js';
 import { Indicator } from './ui/indicator.js';
 import { Menu } from './ui/menu.js';
-import { PREFERENCES_KEYS } from './constants.js';
+import {
+  COINGECKO_ASSET_SYMBOL,
+  COINGECKO_ASSET_URL,
+  PREFERENCES_KEYS,
+} from './constants.js';
+import { formatPrice } from './utils.js';
 
 export default class StatlensExtension extends Extension {
   enable() {
@@ -20,14 +27,20 @@ export default class StatlensExtension extends Extension {
     this._fetching = false;
     this._lastData = null;
     this._lastCurrency = null;
+    this._notificationSource = null;
 
     this._stats = new StatsService(this._settings);
+    this._alarms = new AlarmsService(this._settings);
 
     this._indicator = new Indicator();
 
     const statsSection = new StatsSection(this._settings, this.dir.get_path());
-    this._menu = new Menu(this.uuid, this._stats.meta, statsSection, () =>
-      this._refresh(),
+    this._menu = new Menu(
+      this.uuid,
+      this._settings,
+      this._stats.meta,
+      statsSection,
+      () => this._refresh(),
     );
     this._indicator.menu.addMenuItem(this._menu);
 
@@ -43,12 +56,34 @@ export default class StatlensExtension extends Extension {
     this._stopTimer();
     this._disconnectSettings();
     this._indicator?.destroy();
+    this._notificationSource?.destroy();
     this._indicator = null;
     this._menu = null;
     this._stats = null;
+    this._alarms = null;
     this._settings = null;
+    this._notificationSource = null;
     this._lastData = null;
     this._lastCurrency = null;
+  }
+
+  _getNotificationSource() {
+    if (!this._notificationSource) {
+      this._notificationSource = new MessageTray.Source({
+        title: 'Statlens',
+        icon: new Gio.ThemedIcon({ name: 'alarm-symbolic' }),
+      });
+
+      // The shell may destroy the source (e.g. the user clears it from the
+      // Notifications panel); reset the reference so it gets recreated.
+      this._notificationSource.connect('destroy', () => {
+        this._notificationSource = null;
+      });
+
+      Main.messageTray.add(this._notificationSource);
+    }
+
+    return this._notificationSource;
   }
 
   async _refresh() {
@@ -73,12 +108,33 @@ export default class StatlensExtension extends Extension {
 
       this._indicator.setPrice(data.price, data.change, currency);
       this._menu.update(data, currency);
+
+      this._notifyTriggeredAlarms(data.priceUsd);
     } catch (error) {
       if (this._cancellable.is_cancelled()) return;
       this._indicator.setError(error.message);
       this._menu.collapse();
     } finally {
       this._fetching = false;
+    }
+  }
+
+  _notifyTriggeredAlarms(priceUsd) {
+    const triggeredAlarms = this._alarms.consumeTriggered(priceUsd);
+    if (triggeredAlarms.length === 0) return;
+
+    const source = this._getNotificationSource();
+
+    for (const alarm of triggeredAlarms) {
+      const notification = new MessageTray.Notification({
+        source,
+        title: `${COINGECKO_ASSET_SYMBOL} Price Alarm`,
+        body: `Price ${alarm.above ? 'reached' : 'dropped to'} ${formatPrice(alarm.target, 'usd')}`,
+      });
+      notification.connect('activated', () => {
+        Gio.AppInfo.launch_default_for_uri(COINGECKO_ASSET_URL, null);
+      });
+      source.addNotification(notification);
     }
   }
 

@@ -6,11 +6,14 @@ import Gio from 'gi://Gio';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
+import { PREFERENCES_KEYS } from '../constants.js';
+
 export class Menu extends PopupMenu.PopupMenuSection {
-  constructor(uuid, meta, statsSection, refreshCallback) {
+  constructor(uuid, settings, meta, statsSection, refreshCallback) {
     super();
 
     this._uuid = uuid;
+    this._settings = settings;
     this._meta = meta;
     this._refreshCallback = refreshCallback;
     this._stats = statsSection;
@@ -23,16 +26,8 @@ export class Menu extends PopupMenu.PopupMenuSection {
     this._clearOuterItems();
     this._stats.setActive(false);
 
-    const settingsItem = new PopupMenu.PopupImageMenuItem(
-      'Settings',
-      'system-settings-symbolic',
-      {},
-    );
-    settingsItem.connect('activate', () => {
-      const ext = Extension.lookupByUUID(this._uuid);
-      ext?.openPreferences()?.catch(() => {});
-    });
-    this.addMenuItem(settingsItem);
+    this._addAlarmsItem();
+    this._addSettingsItem();
   }
 
   restore() {
@@ -61,6 +56,8 @@ export class Menu extends PopupMenu.PopupMenuSection {
       this.addMenuItem(linkItem);
     }
 
+    this._addAlarmsItem();
+
     if (showRefresh) {
       const refreshItem = new PopupMenu.PopupImageMenuItem(
         'Refresh',
@@ -76,15 +73,34 @@ export class Menu extends PopupMenu.PopupMenuSection {
 
     this.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
+    this._addSettingsItem();
+  }
+
+  _openPreferencesPage(pageName) {
+    this._settings.set_string(PREFERENCES_KEYS.PREFS_TARGET_PAGE, pageName);
+    const ext = Extension.lookupByUUID(this._uuid);
+    ext?.openPreferences()?.catch(() => {});
+  }
+
+  _addAlarmsItem() {
+    const alarmsItem = new PopupMenu.PopupImageMenuItem(
+      'Price Alarms',
+      'alarm-symbolic',
+      {},
+    );
+    alarmsItem.connect('activate', () => this._openPreferencesPage('alarms'));
+    this.addMenuItem(alarmsItem);
+  }
+
+  _addSettingsItem() {
     const settingsItem = new PopupMenu.PopupImageMenuItem(
       'Settings',
       'system-settings-symbolic',
       {},
     );
-    settingsItem.connect('activate', () => {
-      const ext = Extension.lookupByUUID(this._uuid);
-      ext?.openPreferences()?.catch(() => {});
-    });
+    settingsItem.connect('activate', () =>
+      this._openPreferencesPage('settings'),
+    );
     this.addMenuItem(settingsItem);
   }
 

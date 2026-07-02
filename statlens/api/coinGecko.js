@@ -21,7 +21,8 @@ export class CoinGeckoClient {
   }
 
   async fetchCoinPrice(coinId, vsCurrency, cancellable) {
-    const url = `${this._baseUrl}/simple/price?ids=${encodeURIComponent(coinId)}&vs_currencies=${encodeURIComponent(vsCurrency)}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
+    const currencies = [...new Set([vsCurrency, 'usd'])].join(',');
+    const url = `${this._baseUrl}/simple/price?ids=${encodeURIComponent(coinId)}&vs_currencies=${encodeURIComponent(currencies)}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
     return this._fetchJson(url, cancellable);
   }
 

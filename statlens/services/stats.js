@@ -84,6 +84,7 @@ export class StatsService {
     return {
       rank: details?.market_cap_rank ?? null,
       price: rawPriceResponse[vsCurrency],
+      priceUsd: rawPriceResponse.usd,
       change: rawPriceResponse[`${vsCurrency}_24h_change`],
       sparkline: sparkline ?? null,
       volume: rawPriceResponse[`${vsCurrency}_24h_vol`],

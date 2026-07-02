@@ -7,8 +7,10 @@ import Gtk from 'gi://Gtk';
 
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
+import { AlarmsService } from './services/alarms.js';
 import {
   AVAILABLE_CURRENCIES,
+  MAX_PRICE_ALARMS,
   MAX_REFRESH_INTERVAL,
   MIN_REFRESH_INTERVAL,
   PREFERENCES_KEYS,
@@ -18,13 +20,43 @@ import {
 export default class StatlensPreferences extends ExtensionPreferences {
   fillPreferencesWindow(window) {
     const settings = this.getSettings();
+    const alarmsService = new AlarmsService(settings);
 
-    const page = new Adw.PreferencesPage();
-    page.add(this._buildStatsGroup(settings));
-    page.add(this._buildDataGroup(settings));
-    page.add(this._buildApiGroup(settings));
-    page.add(this._buildRefreshGroup(settings));
-    window.add(page);
+    const settingsPage = new Adw.PreferencesPage({
+      name: 'settings',
+      title: 'Settings',
+      icon_name: 'system-settings-symbolic',
+    });
+    settingsPage.add(this._buildStatsGroup(settings));
+    settingsPage.add(this._buildDataGroup(settings));
+    settingsPage.add(this._buildApiGroup(settings));
+    settingsPage.add(this._buildRefreshGroup(settings));
+    window.add(settingsPage);
+
+    const alarmsPage = new Adw.PreferencesPage({
+      name: 'alarms',
+      title: 'Alarms',
+      icon_name: 'alarm-symbolic',
+    });
+    window.add(alarmsPage);
+
+    let alarmsGroup = null;
+    const rebuildAlarms = () => {
+      if (alarmsGroup) alarmsPage.remove(alarmsGroup);
+      alarmsGroup = this._buildAlarmsGroup(alarmsService, rebuildAlarms);
+      alarmsPage.add(alarmsGroup);
+    };
+    rebuildAlarms();
+
+    this._showTargetPage(window, settings);
+  }
+
+  _showTargetPage(window, settings) {
+    const targetPage = settings.get_string(PREFERENCES_KEYS.PREFS_TARGET_PAGE);
+    if (!targetPage) return;
+
+    window.set_visible_page_name(targetPage);
+    settings.set_string(PREFERENCES_KEYS.PREFS_TARGET_PAGE, '');
   }
 
   _buildStatsGroup(settings) {
@@ -119,5 +151,112 @@ export default class StatlensPreferences extends ExtensionPreferences {
 
     group.add(intervalRow);
     return group;
+  }
+
+  _buildAlarmsGroup(alarmsService, rebuildAlarms) {
+    const alarms = alarmsService.getAlarms();
+    const group = new Adw.PreferencesGroup({
+      title: 'Price Alarms',
+      description: 'Get notified once when SHX reaches a target price in USD.',
+    });
+
+    alarms.forEach((alarm, index) => {
+      group.add(
+        this._buildAlarmRow(alarmsService, alarms, alarm, index, rebuildAlarms),
+      );
+    });
+
+    const addRow = new Adw.ButtonRow({ title: 'Add Alarm' });
+    addRow.set_sensitive(alarms.length < MAX_PRICE_ALARMS);
+    addRow.connect('activated', () => {
+      alarmsService.setAlarms([...alarms, { target: 0, above: true }]);
+      rebuildAlarms();
+    });
+    group.add(addRow);
+
+    return group;
+  }
+
+  _buildAlarmRow(alarmsService, alarms, alarm, index, rebuildAlarms) {
+    const row = new Adw.SpinRow({
+      title: `Alarm ${index + 1}`,
+      subtitle: alarm.above ? 'Notify above target' : 'Notify below target',
+      digits: 6,
+      adjustment: new Gtk.Adjustment({
+        lower: 0,
+        upper: 100000000,
+        step_increment: 0.000001,
+      }),
+      value: alarm.target,
+    });
+
+    row.connect('notify::value', () => {
+      alarm.target = row.value;
+      alarmsService.setAlarms(alarms);
+    });
+
+    const directionToggle = this._buildDirectionToggle(alarm, () => {
+      row.subtitle = alarm.above
+        ? 'Notify above target'
+        : 'Notify below target';
+      alarmsService.setAlarms(alarms);
+    });
+
+    const removeButton = new Gtk.Button({
+      icon_name: 'app-remove-symbolic',
+      valign: Gtk.Align.CENTER,
+      css_classes: ['flat', 'error'],
+      tooltip_text: 'Remove alarm',
+    });
+    removeButton.connect('clicked', () => {
+      alarmsService.setAlarms(alarms.filter((_, i) => i !== index));
+      rebuildAlarms();
+    });
+
+    row.add_suffix(directionToggle);
+    row.add_suffix(removeButton);
+    return row;
+  }
+
+  _buildDirectionToggle(alarm, onChange) {
+    const aboveButton = new Gtk.ToggleButton({
+      icon_name: 'pan-up-symbolic',
+      tooltip_text: 'Notify above target',
+      active: alarm.above,
+    });
+
+    const belowButton = new Gtk.ToggleButton({
+      icon_name: 'pan-down-symbolic',
+      tooltip_text: 'Notify below target',
+      active: !alarm.above,
+    });
+    belowButton.set_group(aboveButton);
+
+    const applyColors = () => {
+      aboveButton.css_classes = aboveButton.active ? ['success'] : [];
+      belowButton.css_classes = belowButton.active ? ['error'] : [];
+    };
+    applyColors();
+
+    aboveButton.connect('toggled', () => {
+      if (!aboveButton.active) return;
+      alarm.above = true;
+      applyColors();
+      onChange();
+    });
+    belowButton.connect('toggled', () => {
+      if (!belowButton.active) return;
+      alarm.above = false;
+      applyColors();
+      onChange();
+    });
+
+    const box = new Gtk.Box({
+      css_classes: ['linked'],
+      valign: Gtk.Align.CENTER,
+    });
+    box.append(aboveButton);
+    box.append(belowButton);
+    return box;
   }
 }
