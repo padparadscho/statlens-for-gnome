@@ -35,8 +35,8 @@ export class StatsService {
 		if (!rawPriceResponse || rawPriceResponse[vsCurrency] === undefined)
 			throw new Error(Errors.DATA_ERROR);
 
-		await this._fetchDetailsIfNeeded(cancellable);
-		await this._fetchChartIfNeeded(vsCurrency, cancellable);
+		await this._fetchDetails(cancellable);
+		await this._fetchChart(vsCurrency, cancellable);
 
 		return this._normalize(
 			rawPriceResponse,
@@ -46,33 +46,21 @@ export class StatsService {
 		);
 	}
 
-	async _fetchDetailsIfNeeded(cancellable) {
-		if (this._detailsCache) return;
-
-		try {
-			this._detailsCache = await this._client.fetchCoinDetails(
-				COINGECKO_ASSET_ID,
-				cancellable,
-			);
-		} catch {
-			// Detail fields will be missing until next enable
-		}
+	async _fetchDetails(cancellable) {
+		this._detailsCache = await this._client.fetchCoinDetails(
+			COINGECKO_ASSET_ID,
+			cancellable,
+		);
 	}
 
-	async _fetchChartIfNeeded(vsCurrency, cancellable) {
-		if (this._chartCache) return;
-
-		try {
-			const chartResponse = await this._client.fetchCoinChart(
-				COINGECKO_ASSET_ID,
-				vsCurrency,
-				1,
-				cancellable,
-			);
-			this._chartCache = chartResponse.prices?.map(([, price]) => price) ?? [];
-		} catch {
-			// Sparkline will be empty until next enable
-		}
+	async _fetchChart(vsCurrency, cancellable) {
+		const chartResponse = await this._client.fetchCoinChart(
+			COINGECKO_ASSET_ID,
+			vsCurrency,
+			1,
+			cancellable,
+		);
+		this._chartCache = chartResponse.prices?.map(([, price]) => price) ?? [];
 	}
 
 	setApiKey(apiKey) {
