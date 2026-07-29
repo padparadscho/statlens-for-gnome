@@ -1,3 +1,2 @@
 minimumReleaseAgeExclude:
-  - eslint
-  - prettier
+  - "@biomejs/*"

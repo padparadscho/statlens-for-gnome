@@ -1,0 +1,65 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": ["**", "!statlens/icons", "!statlens/schemas/gschemas.compiled"]
+	},
+	"formatter": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"style": {
+				"useConst": "error"
+			},
+			"correctness": {
+				"noUnusedVariables": "error",
+				"noUnusedImports": "error"
+			},
+			"suspicious": {
+				"noPrototypeBuiltins": "off"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		},
+		"globals": [
+			"ARGV",
+			"Debugger",
+			"System",
+			"TextDecoder",
+			"TextEncoder",
+			"Window",
+			"global",
+			"globalThis",
+			"imports",
+			"log",
+			"logError",
+			"print",
+			"printerr"
+		]
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.css"],
+			"linter": { "enabled": false }
+		}
+	]
+}
