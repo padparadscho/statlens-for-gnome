@@ -138,6 +138,10 @@ export default class StatlensExtension extends Extension {
 	}
 
 	_startTimer() {
+		if (this._timeoutId) {
+			GLib.Source.remove(this._timeoutId);
+			this._timeoutId = null;
+		}
 		const interval = this._settings.get_int(PREFERENCES_KEYS.REFRESH_INTERVAL);
 		this._timeoutId = GLib.timeout_add_seconds(
 			GLib.PRIORITY_DEFAULT,
@@ -162,10 +166,7 @@ export default class StatlensExtension extends Extension {
 		this._signalIds.push(
 			this._settings.connect(
 				`changed::${PREFERENCES_KEYS.REFRESH_INTERVAL}`,
-				() => {
-					this._stopTimer();
-					this._startTimer();
-				},
+				() => this._startTimer(),
 			),
 		);
 
@@ -197,9 +198,7 @@ export default class StatlensExtension extends Extension {
 	}
 
 	_disconnectSettings() {
-		for (const id of this._signalIds) {
-			if (id) this._settings.disconnect(id);
-		}
+		for (const id of this._signalIds) this._settings.disconnect(id);
 		this._signalIds = [];
 	}
 }
