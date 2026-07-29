@@ -19,9 +19,11 @@ export const Sparkline = GObject.registerClass(
 				reactive: false,
 			});
 			this._prices = [];
-			this.connect("destroy", () => {
-				this._prices = [];
-			});
+		}
+
+		destroy() {
+			this._prices = [];
+			super.destroy();
 		}
 
 		setPrices(prices) {
@@ -33,7 +35,7 @@ export const Sparkline = GObject.registerClass(
 			if (this._prices.length < 2) return;
 
 			const [width, height] = this.get_surface_size();
-			const cr = this.get_context(); // cairo context
+			const cr = this.get_context();
 
 			const min = Math.min(...this._prices);
 			const max = Math.max(...this._prices);
