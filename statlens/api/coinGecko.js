@@ -87,4 +87,8 @@ export class CoinGeckoClient {
 	setApiKey(apiKey) {
 		this._apiKey = apiKey;
 	}
+
+	destroy() {
+		this._session.abort();
+	}
 }

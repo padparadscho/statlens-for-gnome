@@ -52,8 +52,10 @@ export default class StatlensExtension extends Extension {
 
 	disable() {
 		this._cancellable?.cancel();
+		this._cancellable = null;
 		this._stopTimer();
 		this._disconnectSettings();
+		this._stats?.destroy();
 		this._indicator?.destroy();
 		this._notificationSource?.destroy();
 		this._indicator = null;

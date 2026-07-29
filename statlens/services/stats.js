@@ -79,6 +79,12 @@ export class StatsService {
 		this._client.setApiKey(apiKey);
 	}
 
+	destroy() {
+		this._client.destroy();
+		this._detailsCache = null;
+		this._chartCache = null;
+	}
+
 	_normalize(rawPriceResponse, details, sparkline, vsCurrency) {
 		const market = details?.market_data;
 		return {
