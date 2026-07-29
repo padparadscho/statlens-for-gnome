@@ -5,6 +5,5 @@
 	"uuid": "statlens@padparadscho.com",
 	"shell-version": ["49", "50"],
 	"url": "https://github.com/padparadscho/statlens-for-gnome",
-	"settings-schema": "org.gnome.shell.extensions.statlens",
-	"gettext-domain": "statlens"
+	"settings-schema": "org.gnome.shell.extensions.statlens"
 }
